@@ -60,9 +60,11 @@ echo.
 echo Saving local changes...
 git stash push -m "%STASH_MSG%"
 
+echo.
 echo Detecting default branch...
 for /f %%i in ('git symbolic-ref --short refs/remotes/origin/HEAD') do set MAIN=%%i
 set MAIN=%MAIN:origin/=%
+echo Default branch detected: %MAIN%
 
 @REM echo Checking out %MAIN%...
 @REM git checkout %MAIN%
@@ -73,10 +75,12 @@ set MAIN=%MAIN:origin/=%
 @REM echo Checking out previous branch...
 @REM git checkout -
 
+@REM git pull --progress -v --no-rebase #by TurtoiseGit
 echo.
 echo Pulling latest changes
-git pull
+git pull --no-rebase
 
+@REM git merge --no-ff -- remotes/origin/%MAIN%
 @REM --no-ff for merge commit, --no-edit to skip the editor
 echo.
 echo Merging changes...
@@ -87,8 +91,18 @@ echo Status after merge...
 git status
 
 echo.
-echo Pushing changes...
-git push
+echo Detecting current branch...
+for /f %%i in ('git branch --show-current') do set BRANCH=%%i
+
+if "%BRANCH%"=="" (
+    echo Not on a branch or Git repository not detected.
+    exit /b 1
+)
+echo Detected current branch: %BRANCH%
+
+echo.
+echo Pushing changes to %BRANCH%...
+git push origin %BRANCH%
 
 echo.
 echo ====================================
